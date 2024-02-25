@@ -42,10 +42,7 @@ MainWindow::MainWindow(QWidget *parent)
   x_valid();
   credit_valid();
   interest_rate_valid();
-  ui->label_2->setStyleSheet("border-image:url(src/calc.png);");
 }
-
-
 
 MainWindow::~MainWindow() { delete ui; }
 
@@ -145,4 +142,3 @@ void MainWindow::interest_rate_valid() {
   QValidator *validator = new QRegularExpressionValidator(regx, this);
   ui->interest_rate->setValidator(validator);
 }
-

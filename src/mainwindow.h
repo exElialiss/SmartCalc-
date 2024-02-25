@@ -4,7 +4,6 @@
 #define BUFFER 255
 #include <QMainWindow>
 
-
 #include "qcustomplot.h"
 
 extern "C" {
@@ -56,6 +55,5 @@ class MainWindow : public QMainWindow {
                              const double end_payment, const double overpay,
                              const double result_sum);
   void on_calc_credit_clicked();
-
 };
 #endif  // MAINWINDOW_H
