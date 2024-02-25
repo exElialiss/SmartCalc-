@@ -1,26 +1,68 @@
-#include "validation.h"
+#include "valid.h"
 
-int input_array_validation(char *input_array) {
+#include "stack.h"
+
+int validation_array(char *input_array) {
   int output = OK;
   if (input_array == NULL) {
     output = MEMORY_ERROR;
   } else {
     if (output == OK) {
-      output = check_amount_brackets(input_array);
+      output = check_brackets(input_array);
     }
-    // Проверка названий операторов
     if (output == OK) {
       output = check_name_operators(input_array);
     }
-    // Проверка точек в числах
     if (output == OK) {
       output = check_points(input_array);
+    }
+    if (output == OK) {
+      output = check_oper_place(input_array);
     }
   }
   return output;
 }
 
-int check_amount_brackets(char *input_array) {
+int check_oper_place(char *input_array) {
+  int output = OK;
+  char operators[] = {'*', '/', '+', '-', '^'};
+  int len = strlen(input_array);
+
+  if (input_array[len - 1] == '+' || input_array[len - 1] == '-' ||
+      input_array[len - 1] == '*' || input_array[len - 1] == '/' ||
+      input_array[len - 1] == '^') {
+    output = SYNTAX_ERROR;
+  }
+
+  for (int i = 0; i < len - 1; i++) {
+    int is_operator = 0;
+    int operator_count = 0;
+    int operators_count = sizeof(operators) / sizeof(operators[0]);
+    for (int j = 0; j < operators_count; j++) {
+      if (input_array[i] == operators[j]) {
+        is_operator = 1;
+        operator_count++;
+        break;
+      }
+    }
+    if (is_operator) {
+      int is_next_operator = 0;
+      for (int j = 0; j < operators_count; j++) {
+        if (input_array[i + 1] == operators[j]) {
+          is_next_operator = 1;
+          break;
+        }
+      }
+      if (is_next_operator) {
+        output = SYNTAX_ERROR;
+        break;
+      }
+    }
+  }
+  return output;
+}
+
+int check_brackets(char *input_array) {
   int output = OK;
   if (input_array == NULL) {
     output = MEMORY_ERROR;
@@ -65,44 +107,33 @@ int check_name_operators(char *input_array) {
             start[0] == 't' || start[0] == 'l') {
           size += 1;
         }
-        char *potential_operator = init_char_array(size + 1);
+        char *potential_operator = (char *)calloc(size + 1, sizeof(char));
         if (potential_operator == NULL) {
           output = MEMORY_ERROR;
         } else {
           potential_operator = strncpy(potential_operator, start, size);
-          output = compare_name_operator(potential_operator);
+          int match = 1;
+          if (strcmp(potential_operator, "mod") == 0 ||
+              strcmp(potential_operator, "cos(") == 0 ||
+              strcmp(potential_operator, "sin(") == 0 ||
+              strcmp(potential_operator, "tan(") == 0 ||
+              strcmp(potential_operator, "acos(") == 0 ||
+              strcmp(potential_operator, "asin(") == 0 ||
+              strcmp(potential_operator, "atan(") == 0 ||
+              strcmp(potential_operator, "sqrt(") == 0 ||
+              strcmp(potential_operator, "ln(") == 0 ||
+              strcmp(potential_operator, "log(") == 0 ||
+              strcmp(potential_operator, "x") == 0) {
+            match = 0;
+          }
+          if (match) {
+            output = SYNTAX_ERROR;
+          }
           free(potential_operator);
-          potential_operator = NULL;
           start = NULL;
           end = NULL;
         }
       }
-    }
-  }
-  return output;
-}
-
-int compare_name_operator(const char *potential_operator) {
-  int output = OK;
-  if (potential_operator == NULL) {
-    output = MEMORY_ERROR;
-  } else {
-    int match = 1;
-    if (strcmp(potential_operator, "mod") == 0 ||
-        strcmp(potential_operator, "cos(") == 0 ||
-        strcmp(potential_operator, "sin(") == 0 ||
-        strcmp(potential_operator, "tan(") == 0 ||
-        strcmp(potential_operator, "acos(") == 0 ||
-        strcmp(potential_operator, "asin(") == 0 ||
-        strcmp(potential_operator, "atan(") == 0 ||
-        strcmp(potential_operator, "sqrt(") == 0 ||
-        strcmp(potential_operator, "ln(") == 0 ||
-        strcmp(potential_operator, "log(") == 0 ||
-        strcmp(potential_operator, "x") == 0) {
-      match = 0;
-    }
-    if (match) {
-      output = SYNTAX_ERROR;
     }
   }
   return output;
@@ -118,59 +149,39 @@ int check_points(char *input_array) {
     char *end = NULL;
     char *point = NULL;
     for (size_t i = 0; i < length && output == OK; i++) {
-      output = find_point(&input_array[i], &start, &point, &end);
-      if (output == OK) {
-        output = check_pointers(&input_array[i], &start, &point, &end);
-      }
-      if (output == SYNTAX_ERROR) {
+      char *symbol = &input_array[i];
+      if (isdigit(*symbol) && start == NULL) {
+        start = symbol;
+      } else if (isdigit(*symbol) && start != NULL) {
+        end = symbol;
+      } else if (*symbol == '.' && point == NULL) {
+        point = symbol;
+      } else if (*symbol == '.' && point != NULL) {
+        output = SYNTAX_ERROR;
         start = NULL;
         end = NULL;
         point = NULL;
       }
-    }
-  }
-  return output;
-}
-
-int find_point(char *symbol, char **start, char **point, char **end) {
-  int output = OK;
-  if (isdigit(*symbol) && *start == NULL) {
-    *start = symbol;
-  } else if (isdigit(*symbol) && *start != NULL) {
-    *end = symbol;
-  } else if (*symbol == '.' && *point == NULL) {
-    *point = symbol;
-  } else if (*symbol == '.' && *point != NULL) {
-    output = SYNTAX_ERROR;
-    *start = NULL;
-    *end = NULL;
-    *point = NULL;
-  }
-  return output;
-}
-
-int check_pointers(char *symbol, char **start, char **point, char **end) {
-  int output = OK;
-  if ((!(isdigit(*symbol)) && *symbol != '.') ||
-      ((isdigit(*symbol) || *symbol == '.') && *(symbol + 1) == '\0')) {
-    if (*point != NULL && *start != NULL && *end != NULL) {
-      if (*point - *start > 0 && *end - *point > 0) {
-        *start = NULL;
-        *end = NULL;
-        *point = NULL;
-      } else {
-        output = SYNTAX_ERROR;
+      if (output == OK) {
+        if ((!isdigit(*symbol) && *symbol != '.') ||
+            ((isdigit(*symbol) || *symbol == '.') && *(symbol + 1) == '\0')) {
+          if (point != NULL && start != NULL && end != NULL) {
+            if (point - start > 0 && end - point > 0) {
+              start = NULL;
+              end = NULL;
+              point = NULL;
+            } else {
+              output = SYNTAX_ERROR;
+            }
+          } else if (point != NULL && (start == NULL || end == NULL)) {
+            output = SYNTAX_ERROR;
+          } else if (point == NULL) {
+            start = NULL;
+            end = NULL;
+          }
+        }
       }
-    } else if (*point != NULL && (*start == NULL || *end == NULL)) {
-      output = SYNTAX_ERROR;
-    } else if (*point == NULL) {
-      *start = NULL;
-      *end = NULL;
     }
   }
   return output;
-}
-
-char *init_char_array(const int length) {
-  return (char *)calloc(length, sizeof(char));
 }

@@ -1,6 +1,6 @@
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 CONFIG += c++17
 
@@ -9,14 +9,23 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    credit_calc.cpp \
+    graph.cpp \
     main.cpp \
     mainwindow.cpp \
+    qcustomplot.cpp \
     valid.c \
-    validation.c
+    stack.c \
+    reverse_polish_notation.c \
+    calculate.c
 
 HEADERS += \
     mainwindow.h \
-    validation.h
+    qcustomplot.h \
+    valid.h \
+    stack.h \
+    reverse_polish_notation.h \
+    calculate.h
 
 FORMS += \
     mainwindow.ui
